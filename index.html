@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Te Amo</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000; /* Fondo negro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #mainText {
+            position: absolute;
+            font-size: 60px; /* Tamaño más grande para destacar */
+            color: #ff69b4; /* Rosa */
+            text-align: center;
+            z-index: 10; /* Por encima de la cascada */
+            text-shadow: 0 0 15px rgba(255, 105, 180, 0.8); /* Brillo rosa */
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; /* Debajo del texto principal */
+        }
+    </style>
+</head>
+<body>
+    <div id="mainText">TE AMO 💖</div>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Ajustar tamaño del canvas
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+
+        // Clase para partículas (cascada y explosiones)
+        class Particle {
+            constructor(x, y, isExplosion = false) {
+                this.x = x;
+                this.y = y;
+                this.text = isExplosion ? "¡TE AMO!" : "TE AMO"; /* "¡TE AMO!" para explosiones, "TE AMO" para cascada */
+                this.size = isExplosion ? Math.random() * 20 + 10 : Math.random() * 15 + 10;
+                this.speedX = isExplosion ? Math.random() * 6 - 3 : 0; /* Movimiento horizontal solo en explosiones */
+                this.speedY = isExplosion ? Math.random() * 6 - 3 : Math.random() * 3 + 1; /* Caída para cascada */
+                this.opacity = 1;
+                this.color = isExplosion ? '#ff69b4' : 'rgba(173, 216, 230, 0.8)'; /* Rosa para explosiones, azul claro para cascada */
+                this.column = Math.floor(x / (canvas.width / 10)); /* Asignar columna para efecto de cascada */
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.opacity -= this.isExplosion ? 0.03 : 0.01; /* Desvanecimiento */
+                if (!this.isExplosion && this.y > canvas.height) {
+                    this.y = -20; /* Reiniciar arriba */
+                    this.x = this.column * (canvas.width / 10) + Math.random() * (canvas.width / 10); /* Mantener en la misma columna */
+                    this.opacity = 1;
+                }
+            }
+
+            draw() {
+                ctx.font = `${this.size}px Arial`;
+                ctx.fillStyle = `${this.color}, ${this.opacity})`;
+                ctx.fillText(this.text, this.x, this.y);
+            }
+        }
+
+        // Crear partículas para la cascada (en columnas)
+        function createWaterfall() {
+            for (let i = 0; i < 10; i++) { // 10 columnas
+                for (let j = 0; j < 80; j++) { // 50 partículas por columna
+                    const x = i * (canvas.width / 10) + Math.random() * (canvas.width / 10);
+                    particles.push(new Particle(x, Math.random() * -canvas.height));
+                }
+            }
+        }
+
+        // Crear explosión al tocar
+        function createExplosion(x, y) {
+            for (let i = 0; i < 40; i++) {
+                particles.push(new Particle(x, y, true));
+            }
+        }
+
+        // Animación
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.opacity > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        // Detectar toques o clics
+        canvas.addEventListener('click', (e) => {
+            createExplosion(e.clientX, e.clientY);
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            createExplosion(touch.clientX, touch.clientY);
+        });
+
+        // Iniciar cascada y animación
+        createWaterfall();
+        animate();
+    </script>
+</body>
+  </html>
